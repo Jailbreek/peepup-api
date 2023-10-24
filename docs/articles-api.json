@@ -1,0 +1,246 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Articles API",
+        "description": "Articles API schema",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:4335"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "ArticleStatusEnum": {
+                "type": "string",
+                "enum": ["draft", "published", "deleted", "archived"]
+            },
+            "Categories": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Articles": {
+                "type": "object",
+                "example": {
+                    "article": {
+                        "id": "23T14iexample23article23id23",
+                        "title": "Example Article",
+                        "slug": "example-article",
+                        "description": "This is an example article.",
+                        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                        "category": {
+                            "id": "1",
+                            "label": "Category"
+                        },
+                        "status": "published",
+                        "author_id": "author-123",
+                        "like_count": 100,
+                        "click_count": 500,
+                        "repost_count": 20,
+                        "created_at": "2023-10-23T14:30:00Z",
+                        "updated_at": "2023-10-23T16:45:00Z"
+                    }
+                },
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/Categories"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ArticleStatusEnum"
+                    },
+                    "author_id": {
+                        "type": "string"
+                    },
+                    "like_count": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "click_count": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "repost_count": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/articles": {
+            "get": {
+                "summary": "Get all articles",
+                "description": "Get all articles",
+                "operationId": "getArticles",
+                "tags": ["articles"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "article": {
+                                        "$ref": "#/components/schemas/Articles"
+                                    }
+                                },
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Articles"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "example": {
+                                        "errors": {
+                                            "message": "Unexpected error",
+                                            "description": "Unexpected error",
+                                            "status": "Internal Server Error",
+                                            "code": 500
+                                        }
+                                    },
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "example": {
+                                        "errors": {
+                                            "message": "Invalid credentials",
+                                            "description": "Invalid credentials",
+                                            "status": "Unauthorized",
+                                            "code": 401
+                                        }
+                                    },
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create article",
+                "operationId": "createArticle",
+                "tags": ["articles"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "requestBody": {
+                    "description": "Article object",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Articles"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Articles"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/articles/": {}
+    }
+}
