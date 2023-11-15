@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Ramsey\Uuid\Uuid;
 
-class articles extends Model {
+class Article extends Model
+{
+    use HasFactory;
+
+
     protected $table = 'articles';
     public $incrementing = false;
-    protected $primaryKey = "id";
     protected $keyType = "string";
-    protected $timestamps = true;
+    public $timestamps = true;
     protected $casts = [
         'tags' => 'array',
     ];
@@ -29,14 +33,20 @@ class articles extends Model {
         "category",
     ];
 
- protected static function boot()
-    {
+    protected static function boot() {
         parent::boot();
 
-        /* Generate a UUID */
-        self::creating(function ($model) {
-            $model->id = Uuid::uuid4()->toString();
+        static::creating(function ($post) {
+            $post->{$post->getKeyName()} = (string) Uuid::uuid4();
         });
     }
 
+    public function getIncrementing() {
+        return false;
+    }
+
+
+    public function getKeyType() {
+        return 'string';
+    }
 }
