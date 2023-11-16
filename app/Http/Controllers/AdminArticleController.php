@@ -43,7 +43,8 @@ class AdminArticleController extends Controller {
             return response()->json(['data' => [ ]], 200);
         }
 
-        return response()->json([ 'data' => $data], 200);
+
+        return response()->json([ 'data' => $data ], 200);
     }
 
     public function store(Request $request) {
@@ -62,7 +63,6 @@ class AdminArticleController extends Controller {
         ]);
 
         Article::create($parsed);
-
         return response()->json(['data' => $request->all()], 201);
     }
 

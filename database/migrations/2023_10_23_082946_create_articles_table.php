@@ -18,14 +18,14 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('content')->nullable();
             $table->integer('categories')->unsigned();
-            $table->foreign('categories')->references('id')->on('categories');
             $table->text('image')->nullable();
-            $table->enum('status', ['draft', 'published', 'archived', "deleted"])->nullable();
+            $table->enum('status', ['draft', 'published', 'archived', "deleted", "dumped"])->nullable();
             $table->integer('like_count')->nullable();
             $table->integer('click_count')->nullable();
             $table->integer('repost_count')->nullable();
             $table->string('author_id')->nullable(false);
             $table->timestamps();
+            $table->foreign('categories')->references('id')->on('categories');
         });
     }
 
