@@ -9,6 +9,7 @@ Route::name('admin_posts_articles')->prefix("admin")->group(function() {
     // To-do: Add Authorization middleware to all routes in this group
     Route::name("admin_crud_articles")->prefix("posts")->group(function() {
         Route::get('/articles', [AdminArticleController::class, "getArticles"])->name('admin_get_articles');
+        Route::get('/articles/preview', [AdminArticleController::class, "getArticlesPreview"])->name('admin_get_articles_preview');
         Route::get('/{author_id}/articles', [AdminArticleController::class, "getArticlesByAuthorId"])->name('admin_get_articles');
         Route::get('/articles/{id}', [AdminArticleController::class, "getArticleById"])->name('admin_get_article_by_id');
         Route::put('/articles', [AdminArticleController::class, "updateArticleById"])->name('admin_update_article');
