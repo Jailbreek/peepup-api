@@ -16,6 +16,20 @@ class AdminArticleController extends Controller {
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
     }
 
+
+    public function getArticlesPreview() {
+        $articles = Article::where('status', '=', 'published')
+        ->select('id', 'title', 'slug', 'description', 'image', 'author_id', 'created_at', "categories", "like_count", "click_count", "repost_count")
+        ->limit(10)
+        ->get();
+
+        if (count($articles) == 0) {
+            return response()->json(['data' => []], 200);
+        }
+
+        return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
+    }
+
     public function getArticlesByAuthorId(string $author_id) {
         $articles = Article::where('author_id', $author_id)->get();
 

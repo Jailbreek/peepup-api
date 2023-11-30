@@ -25,7 +25,6 @@ return new class extends Migration
             $table->integer('repost_count')->nullable();
             $table->string('author_id')->nullable(false);
             $table->timestamps();
-            $table->foreign('categories')->references('id')->on('categories');
         });
     }
 

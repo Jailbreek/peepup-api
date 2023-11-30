@@ -227,14 +227,13 @@ We've discussed two forms of pre-rendering for Next.js.
 HEREA;
 
         $md_encode = base64_encode($md);
-
         $dummy = new Article([
-                'title' => $faker->sentence(2),
+                'title' => $faker->sentence(50, true),
                 'slug' => $faker->slug,
-                'description' => $faker->paragraph(1),
+                'description' => $faker->text(300),
                 'content' => $md,
-                'image' => $faker->imageUrl(),
-                'categories' => $faker->numberBetween(1, 3),
+                'image' => $faker->image(null, 1080, 1920, 'animals', true, true, 'cats', true, 'jpg'),
+                'categories' => $faker->numberBetween(1, 20),
                 'status' => 'published',
                 'like_count' => $faker->numberBetween(0, 100),
                 'click_count' => $faker->numberBetween(0, 100),
@@ -258,14 +257,14 @@ HEREA;
             $out->writeln('md !== md_decode');
         }
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             Article::create([
-                'title' => $faker->sentence(2),
+                'title' => $faker->words(10, true),
                 'slug' => $faker->slug,
-                'description' => $faker->paragraph(1),
-                'content' => $md_encode,
+                'description' => $faker->words(20, true),
+                'content' => $md,
                 'image' => $faker->imageUrl(),
-                'categories' => $faker->numberBetween(1, 3),
+                'categories' => $faker->numberBetween(1, 20),
                 'status' => 'published',
                 'like_count' => $faker->numberBetween(0, 100),
                 'click_count' => $faker->numberBetween(0, 100),
