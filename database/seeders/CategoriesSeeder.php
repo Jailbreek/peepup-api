@@ -5,16 +5,16 @@ namespace Database\Seeders;
 use App\Models\Category;
 use Illuminate\Database\Seeder;
 
-class CategoriesSeeder extends Seeder {
-    public function run(): void {
+class CategoriesSeeder extends Seeder
+{
+    public function run(): void
+    {
         Category::truncate();
 
         $faker = \Faker\Factory::create();
 
         for ($i = 0; $i < 15; $i++) {
-            Category::create([
-                'label' => $faker->word(1),
-            ]);
+            Category::create([ 'label' => $faker->word(1) ]);
         }
     }
 }

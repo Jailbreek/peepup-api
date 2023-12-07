@@ -10,9 +10,14 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('label', 100)->nullable(false);
+        Schema::create('stars', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('article_id');
+            $table->uuid('user_id');
+            $table->integer('star_value')->default(0);
+            $table->timestamps();
+
+            $table->unique(['article_id', 'user_id']);
         });
     }
 
@@ -21,6 +26,6 @@ return new class () extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('stars');
     }
 };
