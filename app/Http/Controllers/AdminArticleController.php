@@ -14,24 +14,32 @@ class AdminArticleController extends Controller
 
         $articles = Article::with('categories')->with("stars")->paginate($size, ['*'], 'page', $page);
 
+
         return response()->json($articles, 200);
+
     }
 
-    public function getArticlesPreview()
+
+    public function getArticlesPreview(Request $request)
     {
+
+        $page = $request->query('page', 1); // default to page 1 if not provided
+        $size = $request->query('size', 10);
+
         $articles = Article::with("categories")
             ->with("stars")
             ->with("reposts")
             ->where('status', '=', 'published')
+            ->orderBy("visit_count", "desc")
             ->select('id', 'title', 'slug', 'description', 'image_cover', 'author_id', 'created_at', "visit_count")
-            ->limit(10)
-            ->get();
+            ->paginate($size, ['*'], 'page', $page);
 
         if (count($articles) == 0) {
             return response()->json(['data' => []], 200);
         }
 
-        return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
+
+        return response()->json(['data' => $articles->items(), "nextCursor" => $articles->nextPageUrl(), 'total' => sizeof($articles)], 200);
     }
 
     public function getArticlesByAuthorId(string $author_id)

@@ -17,28 +17,39 @@ class ArticleController extends Controller
         $status = request()->query('status');
         $title = request()->query('title');
         $sort = request()->query('sort');
+        $slug = request()->query('slug');
 
-        $articles = Article::where('status', '!=', 'dumped')
-            ->where('status', '!=', 'deleted')
+        $articles = Article::where('status', '=', 'published')
             ->when(
                 $title,
                 function ($query, $title) {
                     return $query->where('title', 'like', '%' . $title . '%');
                 }
             )
-        ->when(
-            $status,
-            function ($query, $status) {
-                return $query->where('status', $status);
-            }
-        )
-        ->when(
-            $sort,
-            function ($query, $sort) {
-                return $query->orderBy($sortby ?? "created_at", $sort);
-            }
-        )
-        ->get();
+            ->when(
+                $status,
+                function ($query, $status) {
+                    return $query->where('status', $status);
+                }
+            )
+            ->when(
+                $sort,
+                function ($query, $sort) {
+                    return $query->orderBy($sort ?? "created_at", $sort);
+                }
+            )
+            ->when(
+                $slug,
+                function ($query, $slug) {
+                    return $query->where('slug', $slug);
+                }
+            )
+            ->with("categories")
+            ->with("stars")
+            ->with("reposts")
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
+            ->limit(10)
+            ->get();
 
         if (count($articles) == 0) {
             return response()->json(['data' => []], 200);
@@ -61,19 +72,54 @@ class ArticleController extends Controller
                     return $query->where('status', $status);
                 }
             )
-        ->when(
-            $sort,
-            function ($query, $sort) {
-                return $query->orderBy($sort_by ?? "created_at", $sort);
-            }
-        )
-        ->get();
+            ->when(
+                $sort,
+                function ($query, $sort) {
+                    return $query->orderBy($sort ?? "created_at", $sort);
+                }
+            )
+            ->get();
 
         if (count($articles) == 0) {
             return response()->json(['data' => []], 200);
         }
 
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
+    }
+    // searchArticlesBySlug
+
+    public function searchArticlesBySlug(string $slug)
+    {
+
+        if ($slug == null || empty($slug) || $slug == ":slug") {
+            return response()->json(
+                ['errors' => [
+                'status' => 400,
+                'title' => 'Bad Request',
+                'detail' => 'The id parameter is invalid',
+                'source' => [
+                    'parameter' => 'id',
+                ]]],
+                400
+            );
+        }
+
+        // get articles by id and author_id
+        $data = Article::where('slug', $slug)
+            ->with('stars')
+            ->with('reposts')
+            ->with('categories')
+            ->where('status', '!=', 'dumped')
+            ->where('status', '!=', 'deleted')
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
+            ->first();
+
+
+        if($data == null) {
+            return response()->json(['data' => [ ]], 200);
+        }
+
+        return response()->json([ 'data' => $data], 200);
     }
 
     public function getArticleById(string $author_id, string $id)
@@ -118,7 +164,56 @@ class ArticleController extends Controller
         return response()->json([ 'data' => $data], 200);
     }
 
-    // streamArticleContentById
+    // streamArticleContentBySlug
+
+
+    public function streamArticleContentBySlug(string $slug)
+    {
+
+        /* if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
+            return response()->json(
+                ['errors' => [
+                'status' => 400,
+                'title' => 'Bad Request',
+                'detail' => 'The id parameter is invalid',
+                'source' => [
+                    'parameter' => 'id',
+                ]]],
+                400
+            );
+        } */
+
+        if ($slug == null || empty($slug) || $slug == ":slug") {
+            return response()->json(
+                ['errors' => [
+                'status' => 400,
+                'title' => 'Bad Request',
+                'detail' => 'Slug ' . $slug . ' is not allowed',
+                'source' => [
+                    'parameter' => 'id',
+                ]]],
+                400
+            );
+        }
+
+        // get articles by id and author_id
+        $data = Article::where('slug', $slug)
+            ->where('status', '!=', 'dumped')
+            ->where('status', '!=', 'deleted')
+            ->select('content')
+            ->first();
+
+        if($data == null) {
+            return response(null, 404);
+        }
+
+        $headers = [
+               'Content-Type' => 'application/octet-stream',
+               'Content-Disposition' => 'attachment; filename=' . $slug . '.html',
+           ];
+
+        return response()->json($data->content, 200, $headers);
+    }
 
     public function streamArticleContentById(string $author_id, string $id)
     {
@@ -167,6 +262,7 @@ class ArticleController extends Controller
 
         return response()->json($data->content, 200, $headers);
     }
+
     public function store(Request $request, string $author_id)
     {
         $parsed = $request->validate(
@@ -435,15 +531,15 @@ class ArticleController extends Controller
         return response()->json(['message' => 'The status of article with id ' . $id . ' has been updated' ], 200);
     }
 
-    public function trackArticleVisitor(string $article_id)
+    public function trackArticleVisitor(string $slug)
     {
-        $data = Article::where('id', $article_id)->first();
+        $data = Article::where('slug', $slug)->first();
 
         if ($data == null) {
             return response()->json(
                 ['erorrs' => [
                 'status' => 400,
-                'message' => 'The article with id ' . $article_id . ' does not exist',
+                'message' => 'The article with slug: ' . $slug . ' does not exist',
                 ]],
                 400
             );

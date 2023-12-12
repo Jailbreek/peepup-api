@@ -21,6 +21,7 @@ return new class () extends Migration {
                 $table->text('image_cover')->nullable();
                 $table->enum('status', ['draft', 'published', 'archived', "deleted", "dumped"])->nullable();
                 $table->integer('visit_count')->nullable();
+                $table->string('reading_time')->nullable();
                 $table->string('author_id')->nullable(false);
                 $table->timestamp("created_at")->useCurrent();
                 $table->timestamp("updated_at")->useCurrent()->useCurrentOnUpdate();
