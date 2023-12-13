@@ -13,8 +13,8 @@ class CategoriesSeeder extends Seeder
 
         $faker = \Faker\Factory::create();
 
-        for ($i = 0; $i < 15; $i++) {
-            Category::create([ 'label' => $faker->word(1) ]);
+        for ($i = 0; $i < 50; $i++) {
+            Category::create([ 'label' => $faker->unique()->word(1) ]);
         }
     }
 }
