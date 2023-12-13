@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminArticleController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('admin_posts_articles')->prefix("admin")->group(function () {
@@ -15,6 +16,12 @@ Route::name('admin_posts_articles')->prefix("admin")->group(function () {
         Route::post('/articles', [AdminArticleController::class, "store"])->name('admin_store_article');
         Route::delete('/articles', [AdminArticleController::class, "deleteArticleById"])->name('admin_delete_article');
     });
+});
+
+Route::name("posts_categories")->prefix('posts')->group(function () {
+    // get all categories
+    Route::get('categories', [CategoryController::class, "getCategories"])->name('get_categories');
+    // get category by id
 });
 
 Route::name('posts_articles')->prefix("posts")->group(function () {
