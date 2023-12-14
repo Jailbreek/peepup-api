@@ -1,7 +1,7 @@
 version: "3.3"
 
 services:
-    identity-service-database:
+    articles-service-database:
         container_name: articles-service-db
         image: "postgres:latest"
         restart: always

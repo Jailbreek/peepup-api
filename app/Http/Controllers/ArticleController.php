@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Identity;
 use App\Models\Repost;
 use App\Models\Star;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -86,7 +87,27 @@ class ArticleController extends Controller
 
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
     }
-    // searchArticlesBySlug
+
+    // Popular articles
+
+    public function getPopularArticles(Request $request)
+    {
+
+        $page = $request->query('page', 1);
+        $size = $request->query('size', 10);
+
+        $articles = Article::where('status', '=', 'published')
+            ->limit(10)
+            ->orderBy("visit_count", "desc")
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
+            ->paginate($size, ['*'], 'page', $page);
+
+        if (count($articles) == 0) {
+            return response()->json(['data' => []], 200);
+        }
+
+        return response()->json(['data' => $articles->items(), 'total' => sizeof($articles)], 200);
+    }
 
     public function searchArticlesBySlug(string $slug)
     {

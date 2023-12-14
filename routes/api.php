@@ -29,6 +29,7 @@ Route::name('posts_articles')->prefix("posts")->group(function () {
     Route::name("crud_articles")->group(
         function () {
             Route::get('articles/search', [ArticleController::class, "searchArticles"])->name('search_articles');
+            Route::get('articles/popular', [ArticleController::class, "getPopularArticles"])->name('get_popular_articles');
             Route::get('{author_id}/articles', [ArticleController::class, "getArticles"])->name('get_articles');
             Route::get('{author_id}/articles/{id}', [ArticleController::class, "getArticleById"])->name('get_article_by_id');
             Route::get('articles/{slug}', [ArticleController::class, "searchArticlesBySlug"])->name('search_articles_by_slug');
