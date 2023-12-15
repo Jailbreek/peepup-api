@@ -12,15 +12,29 @@ use Illuminate\Support\Facades\DB;
 
 class ArticleController extends Controller
 {
-    // search articles query
+
+    /*
+     * Get search articles
+     *
+     * @return /Illuminate/Http/JsonResponse
+     * @return /App/Models/Article
+     * */
     public function searchArticles()
     {
-        $status = request()->query('status');
-        $title = request()->query('title');
         $sort = request()->query('sort');
         $slug = request()->query('slug');
+        $title = request()->query('title');
+        $status = request()->query('status');
+        $categories = request()->query('categories');
+        $categoriesArray = explode(',', $categories);
 
-        $articles = Article::where('status', '=', 'published')
+        // Trim each category to remove leading and trailing whitespaces
+        $categoriesArray = array_map('trim', $categoriesArray);
+
+        $articles = Article::query()->where('status', '=', 'published')
+            ->with("stars")
+            ->with("reposts")
+            ->with("categories")
             ->when(
                 $title,
                 function ($query, $title) {
@@ -45,9 +59,26 @@ class ArticleController extends Controller
                     return $query->where('slug', $slug);
                 }
             )
-            ->with("categories")
-            ->with("stars")
-            ->with("reposts")
+            ->when(
+                $categoriesArray,
+                function ($query, $categoriesArray) {
+                    if (is_array($categoriesArray)) {
+                        return $query->whereHas(
+                            'categories',
+                            function ($query) use ($categoriesArray) {
+                                $query->whereIn('label', $categoriesArray);
+                            }
+                        );
+                    } else {
+                        return $query->whereHas(
+                            'categories',
+                            function ($query) use ($categoriesArray) {
+                                $query->where('label', $categoriesArray);
+                            }
+                        );
+                    }
+                }
+            )
             ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
             ->limit(10)
             ->get();
@@ -64,7 +95,7 @@ class ArticleController extends Controller
         $status = request()->query('status');
         $sort = request()->query('sort');
 
-        $articles = Article::where('author_id', $author_id)
+        $articles = Article::query()->where('author_id', $author_id)
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->when(
@@ -96,7 +127,7 @@ class ArticleController extends Controller
         $page = $request->query('page', 1);
         $size = $request->query('size', 10);
 
-        $articles = Article::where('status', '=', 'published')
+        $articles = Article::query()->where('status', '=', 'published')
             ->limit(10)
             ->orderBy("visit_count", "desc")
             ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
@@ -126,7 +157,7 @@ class ArticleController extends Controller
         }
 
         // get articles by id and author_id
-        $data = Article::where('slug', $slug)
+        $data = Article::query()->where('slug', $slug)
             ->with('stars')
             ->with('reposts')
             ->with('categories')
@@ -173,7 +204,7 @@ class ArticleController extends Controller
         }
 
         // get articles by id and author_id
-        $data = Article::where('author_id', $author_id)->where('id', $id)
+        $data = Article::query()->where('author_id', $author_id)->where('id', $id)
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->get();
@@ -218,7 +249,7 @@ class ArticleController extends Controller
         }
 
         // get articles by id and author_id
-        $data = Article::where('slug', $slug)
+        $data = Article::query()->where('slug', $slug)
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->select('content')
@@ -266,7 +297,7 @@ class ArticleController extends Controller
         }
 
         // get articles by id and author_id
-        $data = Article::where('author_id', $author_id)->where('id', $id)
+        $data = Article::query()->where('author_id', $author_id)->where('id', $id)
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->select('content')
@@ -366,7 +397,7 @@ class ArticleController extends Controller
         );
 
 
-        $article = Article::where('author_id', $author_id)->where('id', $id)->first();
+        $article = Article::query()->where('author_id', $author_id)->where('id', $id)->first();
 
         if ($article->status == 'deleted' || $article->status == 'dumped') {
             return response()->json(
@@ -381,7 +412,7 @@ class ArticleController extends Controller
             );
         }
 
-        $reuest['updated_at'] = now();
+        $request['updated_at'] = now();
         $article->update($request->all());
 
         return response()->json(['message' => 'The article with id ' . $id . ' has been updated' ], 200);
@@ -418,7 +449,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('author_id', $author_id)->where('id', $id)->first();
+        $data = Article::query()->where('author_id', $author_id)->where('id', $id)->first();
 
         if ($data == null) {
             return response()->json(
@@ -466,7 +497,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('author_id', $author_id)->where('id', $id)->first();
+        $data = Article::query()->where('author_id', $author_id)->where('id', $id)->first();
 
         if ($data == null) {
             return response()->json(
@@ -530,7 +561,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('author_id', $author_id)
+        $data = Article::query()->where('author_id', $author_id)
         ->where('id', $id)
         ->where('status', '=', 'published')
         ->first();
@@ -545,7 +576,7 @@ class ArticleController extends Controller
             );
         }
 
-        $user = Identity::where('id', "472e9998-01d9-4812-a930-95353f548600")->select('id')->first();
+        $user = Identity::query()->where('id', "472e9998-01d9-4812-a930-95353f548600")->select('id')->first();
         $star = new Star([]);
         $data->update(['status' => $status,'updated_at' => now()]);
         $data->save();
@@ -554,7 +585,7 @@ class ArticleController extends Controller
 
     public function trackArticleVisitor(string $slug)
     {
-        $data = Article::where('slug', $slug)->first();
+        $data = Article::query()->where('slug', $slug)->first();
 
         if ($data == null) {
             return response()->json(
@@ -593,7 +624,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('id', $article_id)
+        $data = Article::query()->where('id', $article_id)
             ->where('status', '=', 'published')
             ->first();
 
@@ -614,7 +645,7 @@ class ArticleController extends Controller
             ->select('id')
             ->first();
 
-        $existedStar = Star::where('article_id', $article_id)
+        $existedStar = Star::query()->where('article_id', $article_id)
             ->where('user_id', $users->id)
             ->first();
 
@@ -655,7 +686,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('id', $article_id)
+        $data = Article::query()->where('id', $article_id)
             ->where('status', '=', 'published')
             ->first();
 
@@ -670,7 +701,7 @@ class ArticleController extends Controller
         }
 
 
-        $star = Star::where('article_id', $article_id)
+        $star = Star::query()->where('article_id', $article_id)
             ->where('id', $id)
             ->first();
 
@@ -700,7 +731,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('id', $article_id)
+        $data = Article::query()->where('id', $article_id)
             ->where('status', '=', 'published')
             ->first();
 
@@ -721,7 +752,7 @@ class ArticleController extends Controller
             ->select('id')
             ->first();
 
-        $alreadyReposted = Repost::where('article_id', $article_id)
+        $alreadyReposted = Repost::query()->where('article_id', $article_id)
             ->where('user_id', $users->id)
             ->first();
 
@@ -755,7 +786,7 @@ class ArticleController extends Controller
             );
         }
 
-        $data = Article::where('id', $article_id)
+        $data = Article::query()->where('id', $article_id)
             ->where('status', '=', 'published')
             ->first();
 
@@ -763,7 +794,7 @@ class ArticleController extends Controller
             return response()->noContent();
         }
 
-        $repost = Repost::where('article_id', $article_id)
+        $repost = Repost::query()->where('article_id', $article_id)
             ->where('id', $id)
             ->first();
 

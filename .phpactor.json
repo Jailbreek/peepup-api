@@ -1,0 +1,7 @@
+{
+    "language_server_completion.trim_leading_dollar": true,
+    "$schema": "/phpactor.schema.json",
+    "language_server_php_cs_fixer.enabled": false,
+    "language_server_phpstan.enabled": false,
+    "language_server_psalm.enabled": false
+}
