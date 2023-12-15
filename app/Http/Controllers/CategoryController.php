@@ -6,16 +6,18 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller {
-
-
+    /**
+     * Get paginated categories.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getCategories(Request $request) {
-        $page = $request->query('page', 1); // default to page 1 if not provided
+        $page = $request->query('page', 1);
         $size = $request->query('size', 10);
 
-        // get all categories with pagination
-        $categories = Category::paginate($size, ['*'], 'page', $page);
+        $categories = Category::query()->paginate($size, ['*'], 'page', $page);
 
         return response()->json($categories, 200);
     }
-
 }
