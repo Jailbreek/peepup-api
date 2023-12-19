@@ -687,30 +687,22 @@ class ArticleController extends Controller
         }
 
         $data = Article::query()->where('id', $article_id)
+            ->with('stars')
             ->where('status', '=', 'published')
             ->first();
 
-        if ($data == null) {
-            return response()->json(
-                ['erorrs' => [
-                'status' => 400,
-                'message' => 'The article with id ' . $article_id . ' does not exist' . ' or the article is not published yet',
-                ]],
-                400
-            );
-        }
 
-
-        $star = Star::query()->where('article_id', $article_id)
-            ->where('id', $id)
-            ->first();
-
-        if ($star == null) {
+        if ($data->stars->isEmpty()) {
             return response()->noContent();
         }
 
+        if ($data->stars == null) {
+            return response()->noContent();
+        }
 
-        $star->delete();
+        $data->stars->where('user_id', $id)->each->delete();
+        $data->save();
+
         return response()->noContent();
     }
 
