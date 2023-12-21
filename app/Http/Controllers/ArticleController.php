@@ -8,7 +8,6 @@ use App\Models\Star;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class ArticleController extends Controller
@@ -23,16 +22,20 @@ class ArticleController extends Controller
         $categoriesArray = explode(',', $categories);
         $categoriesArray = array_map('trim', $categoriesArray);
 
-
         $articles = Article::query()
         ->with('stars')
         ->with('reposts')
         ->with('categories')
+        ->when($title, function ($query) use ($title) {
+            $query->where('title', 'ILIKE', '%' . $title . '%');
+        })
+        ->when($slug, function ($query) use ($slug) {
+            $query->where('slug', 'ILIKE', '%' . $slug . '%');
+        })
+        ->when($status, function ($query) use ($status) {
+            $query->where('status', '=', $status);
+        })
         ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id')
-        ->where('status', '=', 'published')
-        ->where('title', 'like', '%' . $title . '%')
-        ->where('slug', 'like', '%' . $slug . '%')
-        ->where('status', 'like', '%' . $status . '%')
         ->limit(10)
         ->get();
 
@@ -86,7 +89,7 @@ class ArticleController extends Controller
         $articles = Article::query()->where('status', '=', 'published')
             ->limit(10)
             ->orderBy("visit_count", "desc")
-            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'reading_time')
             ->paginate($size, ['*'], 'page', $page);
 
         if (count($articles) == 0) {
@@ -257,23 +260,6 @@ class ArticleController extends Controller
 
     public function store(Request $request, string $author_id): JsonResponse
     {
-        $parsed = $request->validate(
-            [
-            'title' => 'required',
-            'slug' => 'required',
-            'description' => 'required',
-            'content' => 'required',
-            'image_cover' => 'required',
-            'categories' => 'required',
-            'status' => 'required',
-            'likes_count' => 'required',
-            'visit_count' => 'required',
-            'reposts_count' => 'required',
-            ]
-        );
-
-        $parsed['author_id'] = $author_id;
-
         if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
             return response()->json(
                 ['errors' => [
@@ -287,8 +273,21 @@ class ArticleController extends Controller
             );
         }
 
-        Article::create($parsed);
-        return response()->json(['data' => $request->all()], 201);
+        $newArticle = new Article([
+            'title' => $request->input('title'),
+            'slug' => $request->input('slug'),
+            'description' => $request->input('description'),
+            'content' => $request->input('content'),
+            'image_cover' => $request->input('image_cover'),
+            'status' => $request->input('status'),
+            'author_id' => $author_id,
+            'visit_count' => 0,
+            'reading_time' => $request->input('reading_time')
+        ]);
+
+        $newArticle->save();
+
+        return response()->json(['data' => $newArticle], 201);
     }
 
     public function updateArticleById(Request $request, string $author_id): JsonResponse

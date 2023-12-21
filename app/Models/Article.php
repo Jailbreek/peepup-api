@@ -23,7 +23,8 @@ class Article extends Model
         "image_cover",
         "status",
         "visit_count",
-        "author_id"
+        "author_id",
+        "reading_time"
     ];
 
 
@@ -66,9 +67,5 @@ class Article extends Model
     public function uniqueIds(): array
     {
         return ['id'];
-    }
-
-    public static function create(array $parsed)
-    {
     }
 }
