@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Category;
 use App\Models\Repost;
 use App\Models\Star;
 
@@ -35,7 +36,7 @@ class ArticleController extends Controller
         ->when($status, function ($query) use ($status) {
             $query->where('status', '=', $status);
         })
-        ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id')
+        ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id', 'reading_time')
         ->limit(10)
         ->get();
 
@@ -56,7 +57,7 @@ class ArticleController extends Controller
             ->with('stars')
             ->with('reposts')
             ->with('categories')
-            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id')
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id', 'reading_time')
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->when(
@@ -122,7 +123,7 @@ class ArticleController extends Controller
             ->with('categories')
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
-            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id', 'reading_time')
             ->first();
 
 
@@ -260,6 +261,8 @@ class ArticleController extends Controller
 
     public function store(Request $request, string $author_id): JsonResponse
     {
+        // array of categories
+
         if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
             return response()->json(
                 ['errors' => [
@@ -272,6 +275,10 @@ class ArticleController extends Controller
                 400
             );
         }
+
+        $categoryIds = [];
+        $categories = $request->input('categories');
+
 
         $newArticle = new Article([
             'title' => $request->input('title'),
@@ -286,6 +293,17 @@ class ArticleController extends Controller
         ]);
 
         $newArticle->save();
+
+        if (count($categories) >= 0)  {
+            foreach ($categories as $category) {
+                $label = $category['label'];
+                $category = Category::query()->firstOrCreate(['label' => $label]);
+                $categoryIds[] = $category->id;
+            }
+
+            $newArticle->categories()->sync($categoryIds);
+        }
+
 
         return response()->json(['data' => $newArticle], 201);
     }

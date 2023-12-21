@@ -31,7 +31,6 @@ Route::name('posts_articles')->prefix("posts")->group(function () {
             Route::get('{author_id}/articles/{id}', [ArticleController::class, "getArticleById"])->name('get_article_by_id');
             Route::get('articles/{slug}', [ArticleController::class, "searchArticlesBySlug"])->name('search_articles_by_slug');
             Route::get('articles/{slug}/content', [ArticleController::class, "streamArticleContentBySlug"])->name('stream_article_content_by_slug');
-            // Route::get('{author_id}/articles/{slug}/content', [ArticleController::class, "streamArticleContentBySlug"])->name('stream_article_content_by_slug');
             Route::put('{author_id}/articles', [ArticleController::class, "updateArticleById"])->name('update_article');
             Route::post('{author_id}/articles', [ArticleController::class, "store"])->name('store_article');
             Route::delete('{author_id}/articles', [ArticleController::class, "deleteArticleById"])->name('delete_article');
@@ -53,6 +52,7 @@ Route::name('posts_articles')->prefix("posts")->group(function () {
 // categories posts related routes
 Route::name("posts_categories")->prefix('posts')->group(function () {
     Route::get('categories', [CategoryController::class, "getCategories"])->name('get_categories_paginate');
+    Route::post('categories', [CategoryController::class, "store"])->name('store_category');
 });
 
 
@@ -65,7 +65,6 @@ Route::name("posts_reposts")->prefix('posts')->group(function () {
 Route::name("posts_stars")->prefix('posts')->group(function () {
     Route::get('reposts/{user_id}', [RepostController::class, "getAllUserReposts"])->name('get_all_user_stars');
 });
-
 
 Route::name("uploads")->prefix('upload')->group(function () {
     Route::post('image', [ImageController::class, "uploadImage"])->name('upload_image');

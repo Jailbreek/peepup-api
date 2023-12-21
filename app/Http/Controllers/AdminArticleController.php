@@ -12,12 +12,9 @@ class AdminArticleController extends Controller
     {
         $page = $request->query('page', 1); // default to page 1 if not provided
         $size = $request->query('size', 10);
-
         $articles = Article::with('categories')->with("stars")->paginate($size, ['*'], 'page', $page);
 
-
         return response()->json($articles, 200);
-
     }
 
 
@@ -34,7 +31,7 @@ class AdminArticleController extends Controller
             ->withCount('reposts')
             ->where('status', '=', 'published')
             ->orderBy("visit_count", "desc")
-            ->select('id', 'title', 'slug', 'description', 'image_cover', 'author_id', 'created_at', "visit_count")
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'author_id', 'created_at', "visit_count", 'reading_time')
             ->paginate($size, ['*'], 'page', $page);
 
         if (count($articles) == 0) {
@@ -47,7 +44,7 @@ class AdminArticleController extends Controller
 
     public function getArticlesByAuthorId(string $author_id): JsonResponse
     {
-        $articles = Article::where('author_id', $author_id)->get();
+        $articles = Article::query()->where('author_id', $author_id)->get();
 
         if (count($articles) == 0) {
             return response()->json(['data' => []], 200);
