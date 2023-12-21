@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminArticleController extends Controller
 {
-    public function getArticles(Request $request)
+    public function getArticles(Request $request): JsonResponse
     {
         $page = $request->query('page', 1); // default to page 1 if not provided
         $size = $request->query('size', 10);
@@ -20,15 +21,17 @@ class AdminArticleController extends Controller
     }
 
 
-    public function getArticlesPreview(Request $request)
+    public function getArticlesPreview(Request $request): JsonResponse
     {
 
         $page = $request->query('page', 1); // default to page 1 if not provided
         $size = $request->query('size', 10);
 
-        $articles = Article::with("categories")
+        $articles = Article::query()
+            ->with("categories")
             ->with("stars")
             ->with("reposts")
+            ->withCount('reposts')
             ->where('status', '=', 'published')
             ->orderBy("visit_count", "desc")
             ->select('id', 'title', 'slug', 'description', 'image_cover', 'author_id', 'created_at', "visit_count")
@@ -42,7 +45,7 @@ class AdminArticleController extends Controller
         return response()->json(['data' => $articles->items(), "nextCursor" => $articles->nextPageUrl(), 'total' => sizeof($articles)], 200);
     }
 
-    public function getArticlesByAuthorId(string $author_id)
+    public function getArticlesByAuthorId(string $author_id): JsonResponse
     {
         $articles = Article::where('author_id', $author_id)->get();
 
@@ -53,7 +56,7 @@ class AdminArticleController extends Controller
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
     }
 
-    public function getArticleById(string $id)
+    public function getArticleById(string $id): JsonResponse
     {
         if (($id != null && uuid_is_valid($id) == false) || $id == null) {
             return response()->json(
@@ -101,7 +104,7 @@ class AdminArticleController extends Controller
         return response()->json(['data' => $request->all()], 201);
     }
 
-    public function updateArticleById(Request $request)
+    public function updateArticleById(Request $request): JsonResponse
     {
         $id = $request->query('id');
 
@@ -142,7 +145,7 @@ class AdminArticleController extends Controller
         return response()->json(['message' => 'The article with id ' . $id . ' has been updated'], 200);
     }
 
-    public function deleteArticleById(Request $request)
+    public function deleteArticleById(Request $request): JsonResponse
     {
         $id = $request->query('id');
 

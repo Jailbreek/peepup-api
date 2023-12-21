@@ -3,6 +3,8 @@
 use App\Http\Controllers\AdminArticleController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\RepostController;
+use App\Http\Controllers\StarController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('admin_posts_articles')->prefix("admin")->group(function () {
@@ -16,12 +18,6 @@ Route::name('admin_posts_articles')->prefix("admin")->group(function () {
         Route::post('/articles', [AdminArticleController::class, "store"])->name('admin_store_article');
         Route::delete('/articles', [AdminArticleController::class, "deleteArticleById"])->name('admin_delete_article');
     });
-});
-
-Route::name("posts_categories")->prefix('posts')->group(function () {
-    // get all categories
-    Route::get('categories', [CategoryController::class, "getCategories"])->name('get_categories');
-    // get category by id
 });
 
 Route::name('posts_articles')->prefix("posts")->group(function () {
@@ -52,3 +48,20 @@ Route::name('posts_articles')->prefix("posts")->group(function () {
     });
 
 });
+
+// categories posts related routes
+Route::name("posts_categories")->prefix('posts')->group(function () {
+    Route::get('categories', [CategoryController::class, "getCategories"])->name('get_categories_paginate');
+});
+
+
+// posts stars related routes
+Route::name("posts_reposts")->prefix('posts')->group(function () {
+    Route::get('stars/{user_id}', [StarController::class, "getAllUserStars"])->name('get_all_user_stars');
+});
+
+// posts stars related routes
+Route::name("posts_stars")->prefix('posts')->group(function () {
+    Route::get('reposts/{user_id}', [RepostController::class, "getAllUserReposts"])->name('get_all_user_stars');
+});
+
