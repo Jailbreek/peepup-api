@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Article;
+use App\Models\Identity;
 use Illuminate\Database\Seeder;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\DB;
 
 class ArticleSeeder extends Seeder
 {
@@ -65,8 +68,14 @@ class ArticleSeeder extends Seeder
         );
 
         $image = "https://www.coocobolo.com/_next/image/?url=%2Fimages%2F22707-11-171511848.jpeg&w=1920&q=100";
+        $users = DB::connection("identity_db_server")
+            ->table("identities")
+            ->select('id')
+            ->get();
+
         for ($i = 0; $i < 120; $i++) {
             $categories_id = range(1, 10);
+            $random_uid = rand(0, 1);
             $random_int = rand(0, 16);
             $randomImageInt = rand(0, 19);
             shuffle($categories_id);
@@ -82,7 +91,7 @@ class ArticleSeeder extends Seeder
                     'image_cover' => $listImage[$randomImageInt],
                     'status' => 'published',
                     'visit_count' => 0,
-                    'author_id' => $faker->uuid,
+                    'author_id' => $users[$random_uid]->id,
                 ]
             );
 

@@ -67,4 +67,8 @@ class Article extends Model
     {
         return ['id'];
     }
+
+    public static function create(array $parsed)
+    {
+    }
 }

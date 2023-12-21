@@ -3,85 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\Identity;
 use App\Models\Repost;
 use App\Models\Star;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class ArticleController extends Controller
 {
 
-    /*
-     * Get search articles
-     *
-     * @return /Illuminate/Http/JsonResponse
-     * @return /App/Models/Article
-     * */
-    public function searchArticles()
+    public function searchArticles(): JsonResponse
     {
-        $sort = request()->query('sort');
         $slug = request()->query('slug');
         $title = request()->query('title');
         $status = request()->query('status');
         $categories = request()->query('categories');
         $categoriesArray = explode(',', $categories);
-
-        // Trim each category to remove leading and trailing whitespaces
         $categoriesArray = array_map('trim', $categoriesArray);
 
-        $articles = Article::query()->where('status', '=', 'published')
-            ->with("stars")
-            ->with("reposts")
-            ->with("categories")
-            ->when(
-                $title,
-                function ($query, $title) {
-                    return $query->where('title', 'like', '%' . $title . '%');
-                }
-            )
-            ->when(
-                $status,
-                function ($query, $status) {
-                    return $query->where('status', $status);
-                }
-            )
-            ->when(
-                $sort,
-                function ($query, $sort) {
-                    return $query->orderBy($sort ?? "created_at", $sort);
-                }
-            )
-            ->when(
-                $slug,
-                function ($query, $slug) {
-                    return $query->where('slug', $slug);
-                }
-            )
-            ->when(
-                $categoriesArray,
-                function ($query, $categoriesArray) {
-                    if (is_array($categoriesArray)) {
-                        return $query->whereHas(
-                            'categories',
-                            function ($query) use ($categoriesArray) {
-                                $query->whereIn('label', $categoriesArray);
-                            }
-                        );
-                    } else {
-                        return $query->whereHas(
-                            'categories',
-                            function ($query) use ($categoriesArray) {
-                                $query->where('label', $categoriesArray);
-                            }
-                        );
-                    }
-                }
-            )
-            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at')
-            ->limit(10)
-            ->get();
+
+        $articles = Article::query()
+        ->with('stars')
+        ->with('reposts')
+        ->with('categories')
+        ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id')
+        ->where('status', '=', 'published')
+        ->where('title', 'like', '%' . $title . '%')
+        ->where('slug', 'like', '%' . $slug . '%')
+        ->where('status', 'like', '%' . $status . '%')
+        ->limit(10)
+        ->get();
 
         if (count($articles) == 0) {
             return response()->json(['data' => []], 200);
@@ -90,12 +43,17 @@ class ArticleController extends Controller
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
     }
 
-    public function getArticles(string $author_id)
+    public function getArticles(string $author_id): JsonResponse
     {
         $status = request()->query('status');
         $sort = request()->query('sort');
+        $articles = array();
 
         $articles = Article::query()->where('author_id', $author_id)
+            ->with('stars')
+            ->with('reposts')
+            ->with('categories')
+            ->select('id', 'title', 'slug', 'description', 'image_cover', 'status', 'visit_count', 'created_at', 'author_id')
             ->where('status', '!=', 'dumped')
             ->where('status', '!=', 'deleted')
             ->when(
@@ -119,9 +77,7 @@ class ArticleController extends Controller
         return response()->json(['data' => $articles, 'total' => sizeof($articles)], 200);
     }
 
-    // Popular articles
-
-    public function getPopularArticles(Request $request)
+    public function getPopularArticles(Request $request): JsonResponse
     {
 
         $page = $request->query('page', 1);
@@ -140,7 +96,7 @@ class ArticleController extends Controller
         return response()->json(['data' => $articles->items(), 'total' => sizeof($articles)], 200);
     }
 
-    public function searchArticlesBySlug(string $slug)
+    public function searchArticlesBySlug(string $slug): JsonResponse
     {
 
         if ($slug == null || empty($slug) || $slug == ":slug") {
@@ -174,7 +130,7 @@ class ArticleController extends Controller
         return response()->json([ 'data' => $data], 200);
     }
 
-    public function getArticleById(string $author_id, string $id)
+    public function getArticleById(string $author_id, string $id): JsonResponse
     {
 
         if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
@@ -216,24 +172,8 @@ class ArticleController extends Controller
         return response()->json([ 'data' => $data], 200);
     }
 
-    // streamArticleContentBySlug
-
-
-    public function streamArticleContentBySlug(string $slug)
+    public function streamArticleContentBySlug(string $slug): JsonResponse
     {
-
-        /* if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
-            return response()->json(
-                ['errors' => [
-                'status' => 400,
-                'title' => 'Bad Request',
-                'detail' => 'The id parameter is invalid',
-                'source' => [
-                    'parameter' => 'id',
-                ]]],
-                400
-            );
-        } */
 
         if ($slug == null || empty($slug) || $slug == ":slug") {
             return response()->json(
@@ -267,7 +207,7 @@ class ArticleController extends Controller
         return response()->json($data->content, 200, $headers);
     }
 
-    public function streamArticleContentById(string $author_id, string $id)
+    public function streamArticleContentById(string $author_id, string $id): JsonResponse
     {
 
         if (($author_id != null && uuid_is_valid($author_id) == false) || $author_id == null) {
@@ -315,7 +255,7 @@ class ArticleController extends Controller
         return response()->json($data->content, 200, $headers);
     }
 
-    public function store(Request $request, string $author_id)
+    public function store(Request $request, string $author_id): JsonResponse
     {
         $parsed = $request->validate(
             [
@@ -351,7 +291,7 @@ class ArticleController extends Controller
         return response()->json(['data' => $request->all()], 201);
     }
 
-    public function updateArticleById(Request $request, string $author_id)
+    public function updateArticleById(Request $request, string $author_id): JsonResponse
     {
         $id = $request->query('id');
 
@@ -418,7 +358,7 @@ class ArticleController extends Controller
         return response()->json(['message' => 'The article with id ' . $id . ' has been updated' ], 200);
     }
 
-    public function deleteArticleById(Request $request, string $author_id)
+    public function deleteArticleById(Request $request, string $author_id): JsonResponse
     {
         $id = $request->query('id');
 
@@ -467,7 +407,7 @@ class ArticleController extends Controller
         return response()->json(['message' => 'The article with id ' . $id . ' has been deleted' ], 200);
     }
 
-    public function restoreArticleById(Request $request, string $author_id)
+    public function restoreArticleById(Request $request, string $author_id): JsonResponse
     {
         $id = $request->query('id');
 
@@ -514,7 +454,7 @@ class ArticleController extends Controller
         return response()->json(['message' => 'The article with id ' . $id . ' has been restored' ], 200);
     }
 
-    public function updateArticleStatusById(Request $request, string $author_id)
+    public function updateArticleStatusById(Request $request, string $author_id): JsonResponse
     {
         $id = $request->query('id');
         $status = $request->input('status');
@@ -576,8 +516,6 @@ class ArticleController extends Controller
             );
         }
 
-        $user = Identity::query()->where('id', "472e9998-01d9-4812-a930-95353f548600")->select('id')->first();
-        $star = new Star([]);
         $data->update(['status' => $status,'updated_at' => now()]);
         $data->save();
         return response()->json(['message' => 'The status of article with id ' . $id . ' has been updated' ], 200);
