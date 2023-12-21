@@ -33,6 +33,23 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 
 require __DIR__.'/../vendor/autoload.php';
 
+$allowedOrigins = array(
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8000'
+);
+
+if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] != '') {
+    foreach ($allowedOrigins as $allowedOrigin) {
+        if (preg_match('#' . $allowedOrigin . '#', $_SERVER['HTTP_ORIGIN'])) {
+            header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+            header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+            header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token, Authorization, X-Requested-With, x-xsrf-token');
+            header('Access-Control-Allow-Credentials: true');
+            break;
+        }
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Run The Application

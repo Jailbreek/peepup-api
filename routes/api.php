@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminArticleController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\RepostController;
 use App\Http\Controllers\StarController;
 use Illuminate\Support\Facades\Route;
@@ -65,3 +66,7 @@ Route::name("posts_stars")->prefix('posts')->group(function () {
     Route::get('reposts/{user_id}', [RepostController::class, "getAllUserReposts"])->name('get_all_user_stars');
 });
 
+
+Route::name("uploads")->prefix('upload')->group(function () {
+    Route::post('image', [ImageController::class, "uploadImage"])->name('upload_image');
+});
